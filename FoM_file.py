@@ -18,7 +18,7 @@ def FoM(map,col,row,pixel):
         lw = (turnpoints[1]-turnpoints[0])*pixel
         gap = (turnpoints[2]-turnpoints[1])*pixel
 #If the number of exposed pixels is too great, assume that the lines take up the whole space and the gap is 0        
-    elif sum(crosscut)<=(col-4):
+    elif sum(crosscut)>=(col-4):
         lw = col*pixel
         gap = 0
 #If all else fails, assume that the lines did not develop at all

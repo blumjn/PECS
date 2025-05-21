@@ -6,13 +6,12 @@ from FoM_file import *
 from plots_file import *
 
 #inputs:  (0) alpha [nm], (1) beta[nm], (2) eta [%]
-#outputs: (0) alpha [px], (1) beta [px], (2) eta [px], (3) pixel_size [nm],
+#outputs: (0) alpha [nm], (1) beta [nm], (2) eta [%], (3) pixel_size [nm],
 #         (4) beamstep [px], (5) dose [uC/cm2], (6) exposure [uC/cm2], (7) threshold[%]
 raith = raith_setup(10,100,1.25)
 
 width = int(360/raith[3]) #width in nm/pixel size in nm = width in pixels as integer
-height = int(2*raith[1]) #2*beta[px] = height in pixels as integer
-
+height = int(2*raith[1]/raith[3]) #2*beta[nm]/pixel size in nm = height in pixels as integer
 #inputs:  (0) width [px], (1) height[px]
 #outputs: two 2D arrays, 1st for the pattern, 2nd for the exposure
 #         both arrays have pixel size determined by raith[3]
@@ -29,7 +28,7 @@ exposed_map = exposure(pattern,exposure_shape,width,height,*raith)
 
 #Finds which regions will fully develop and sets them equal to 1
 #multiplication by the resolution is a temporary fix to make changing the resolution not significantly change the results
-developed_map = (exposed_map/raith[6]>(raith[7]*raith[3]))
+developed_map = (exposed_map/raith[6]>raith[7])
 
 #inputs: (0) thresholded exposure map, (1) width [px], (2) height [px], (3) pixel size [nm/pixel]
 #outputs: (0-n) figures of merit (n+1) a crosscut at x=0
