@@ -7,6 +7,7 @@ from plots_file import *
 
 #This version is written as a function for The Swarm
 #inputs: (0) alpha [nm], (1) beta [nm], (2) eta [%]
+#input constraints: (0) 2 < alpha < 20, (1) 100 < beta < 2000, (2) 0.5 < beta < 5
 #outputs: (0) line width [nm], [1] gap [nm]
 #output targets: (0) line width = 53, (1) gap = 174  
 
@@ -16,7 +17,6 @@ def PECS_feeder(alpha,beta,eta):
     #outputs: (0) alpha [nm], (1) beta [nm], (2) eta [%], (3) pixel_size [nm],
     #         (4) beamstep [px], (5) dose [uC/cm2], (6) exposure [uC/cm2], (7) threshold[%]
     raith = raith_setup(alpha,beta,eta)
-    print(raith[3])
 
     width = int(360/raith[3]) #width in nm/pixel size in nm = width in pixels as integer
     height = int(2*raith[1]/raith[3]) #2*beta[nm]/pixel size in nm = height in pixels as integer
