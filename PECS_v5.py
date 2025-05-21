@@ -9,23 +9,24 @@ from plots_file import *
 #outputs: (0) alpha [nm], (1) beta [nm], (2) eta [%], (3) pixel_size [nm],
 #         (4) beamstep [px], (5) dose [uC/cm2], (6) exposure [uC/cm2], (7) threshold[%]
 raith = raith_setup(10,100,1.25)
-
+print("Raith")
 width = int(360/raith[3]) #width in nm/pixel size in nm = width in pixels as integer
 height = int(2*raith[1]/raith[3]) #2*beta[nm]/pixel size in nm = height in pixels as integer
 #inputs:  (0) width [px], (1) height[px]
 #outputs: two 2D arrays, 1st for the pattern, 2nd for the exposure
 #         both arrays have pixel size determined by raith[3]
 pattern_shape, exposure_shape = area_setup(width,height)
-
+print("Area Setup")
 #inputs:  (0) 2D array, (1) its width [px], (2) its height [px], (3) nm/pixel [nm], (4) beamstep [px]
 #outputs: 2D array of exposure shape
 pattern = pattern_creation(pattern_shape,width,height,raith[3],raith[4])
-
+print("Pattern Setup")
 #inputs:  (0) 2D array with the pattern to be exposed, (1) 2D array for the exposure, (2) its width [px],
 #         (3) its height [px], (4-11) the machine parameters)
 #outputs: 2D array of exposure shape and amount
+print("Starting Exposure Calculation")
 exposed_map = exposure(pattern,exposure_shape,width,height,*raith)
-
+print("Exposure Calculation")
 #Finds which regions will fully develop and sets them equal to 1
 #multiplication by the resolution is a temporary fix to make changing the resolution not significantly change the results
 developed_map = (exposed_map/raith[6]>raith[7])
