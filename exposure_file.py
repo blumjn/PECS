@@ -2,9 +2,9 @@ def exposure(pattern,exposure_shape,col,row,a,b,n,pixel_size,beamstep,dose,expos
     import numpy as np
     import math as m
 
-#creates arrays with values for x and y in terms of nm with 0 at center (offset by 1)
-    x = np.linspace(0,col*pixel_size,col, dtype='float64')
-    y = np.linspace(0,row*pixel_size,row, dtype='float64')
+#creates arrays with values for x and y in terms of nm
+    x = np.linspace(0,col*pixel_size,col, dtype='float32')
+    y = np.linspace(0,row*pixel_size,row, dtype='float32')
 
 #creates  2D versions of x and y
 
