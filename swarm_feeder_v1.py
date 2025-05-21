@@ -20,9 +20,7 @@ def PECS_feeder(alpha,beta,eta):
 
     width = int(360/raith[3]) #width in nm/pixel size in nm = width in pixels as integer
     height = int(2*raith[1]/raith[3]) #2*beta[nm]/pixel size in nm = height in pixels as integer
-    print(width)
-    print(raith[1])
-    print(height)
+  
     #inputs:  (0) width [px], (1) height[px]
     #outputs: two 2D arrays, 1st for the pattern, 2nd for the exposure
     #         both arrays have pixel size determined by raith[3]
