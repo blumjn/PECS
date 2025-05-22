@@ -9,6 +9,5 @@ def pattern_creation(map,col,row,pixel_size,beamstep):
         for j in range(0, col, beamstep):
             if abs(x[j])>100 and abs(x[j])<140:
                 map[i][j] = 1
-
-    
+                    
     return map

@@ -1,9 +1,11 @@
+import config
+
 from raith_setup_file import *
 from area_setup_file import *
 from pattern_creation_file import *
-from exposure_file import *
 from FoM_file import *
 from plots_file import *
+from split_exposure_file import *
 
 #This version is written as a function for The Swarm
 #inputs: (0) alpha [nm], (1) beta [nm], (2) eta [%]
@@ -29,15 +31,18 @@ def PECS_feeder(alpha,beta,eta):
     #inputs:  (0) 2D array, (1) its width [px], (2) its height [px], (3) nm/pixel [nm], (4) beamstep [px]
     #outputs: 2D array of exposure shape
     pattern = pattern_creation(pattern_shape,width,height,raith[3],raith[4])
+    config.exposed_map = exposure_shape
+
 
     #inputs:  (0) 2D array with the pattern to be exposed, (1) 2D array for the exposure, (2) its width [px],
     #         (3) its height [px], (4-11) the machine parameters)
-    #outputs: 2D array of exposure shape and amount
-    exposed_map = exposure(pattern,exposure_shape,width,height,*raith)
+    #outputs: none, but it updates config.exposed_map with the... exposed map!
+
+    split_exposure(pattern,exposure_shape,width,height,*raith)
 
     #Finds which regions will fully develop and sets them equal to 1
     #multiplication by the resolution is a temporary fix to make changing the resolution not significantly change the results
-    developed_map = (exposed_map/raith[6]>raith[7])
+    developed_map = (config.exposed_map/raith[6]>raith[7])
 
 
     #inputs: (0) thresholded exposure map, (1) width [px], (2) height [px], (3) pixel size [nm/pixel]
