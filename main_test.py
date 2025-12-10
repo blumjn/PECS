@@ -31,7 +31,7 @@ if __name__ == "__main__":
     NO_OF_PARTICLES = 11        # Number of particles in swarm
     #T_MOD = 1                 # Variable time-step extinction coefficient
     TOL = 10 ** -10              # Convergence Tolerance
-    MAXIT = 11000             # Maximum allowed iterations
+    MAXIT = 2            # Maximum allowed iterations
     BOUNDARY = 1                 # int boundary 1 = random,      2 = reflecting
                                     #              3 = absorbing,   4 = invisible
 
@@ -84,7 +84,13 @@ if __name__ == "__main__":
                             func_F, constr_F,
                             opt_df,
                             parent=parent, 
-                            evaluate_threshold=evaluate_threshold, obj_threshold=THRESHOLD)  
+                            evaluate_threshold=evaluate_threshold, obj_threshold=THRESHOLD)
+    
+    #creates the log folder. Only corrects fuckups in your labelling up to iteration 9. No I am not bothering to fix that.
+    while os.path.exists(c.folder):
+          number = int(c.folder[-1])+1
+          c.folder =  c.folder[:-1] + str(number)
+    os.makedirs(c.folder)
     #creates the log files
     with open(os.path.join(c.folder, c.filename), 'w', newline = "") as logfile:
             logwriter = csv.writer(logfile, delimiter = ",")

@@ -16,5 +16,5 @@ antenna_angle = 45.7 #deg, full angle NOT from y=0
 
 ## plotting constants
 tickspacing = 50
-folder = "plots_11_30_25_run1"
+folder = "plots_12_10_25_run1"
 filename = "log.csv"
