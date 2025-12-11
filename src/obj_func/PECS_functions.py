@@ -1,7 +1,29 @@
+#! /usr/bin/python3
+
+##--------------------------------------------------------------------\
+#   PECS
+#   '.src/obj_func/PECS_functions.py'
+#
+#
+#   Author(s):  Josh Blum, Lauren Linkous
+#   Last update: December 11, 2025
+##--------------------------------------------------------------------\
+
+
+import threading
+import numpy as np
+import math as m
+import matplotlib.pyplot as plt
+import cv2
+import os
+
+
+import conf.global_variables as g
+import conf.config as c
+
+
 def area_setup():
-    import numpy as np
-    import global_variables as g
-    import config as c
+
 #This function sets up the empty arrays for both the pattern and the resulting exposure
 #x,y in terms of pixels, not nm
 #pattern is most likely a lower resolution than the exposure and is based on the Raith stepsize
@@ -14,11 +36,9 @@ def area_setup():
     g.perfect_map = np.array([[0 for j in range(pattern_row)] for i in range(pattern_col)], dtype=float)
     return
 
+
+
 def FoM():
-    import config as c
-    import global_variables as g
-    import numpy as np
-    import matplotlib.pyplot as plt
 
     g.overlap_map = np.logical_xor(g.developed_map,g.perfect_map)
     # plt.figure(1)
@@ -30,9 +50,9 @@ def FoM():
     # plt.show()
     return np.count_nonzero(g.overlap_map)
 
+
+
 def FoM_lines():
-    import config as c
-    import global_variables as g
 
 #Takes a crosscut of the map 2 pixels below the top edge of the gap  
     crosscut = g.developed_map[int((g.height/2)+(c.gap_height/(2*c.pixel_size))-2),:]
@@ -66,9 +86,9 @@ def FoM_lines():
             #print("0 turnpoints, lw =", lw, ", gap = ", gap)  
     return w1, gap, w3
 
+
+
 def FoM_antennas():
-    import config as c
-    import global_variables as g
 
 #Take horizontal crosscuts at the vertical center, 1 pixel below the top edge of the gap, and halfway between the top edge of the gap and the top of the antenna 
     h_crosscut_1 = g.developed_map[int(g.height/2),:]
@@ -159,11 +179,9 @@ def FoM_antennas():
 
     return gap1, width1, gap2, width2, gap3, width3, height1, height2, height3
 
+
+
 def pattern_creation():
-    import numpy as np
-    import global_variables as g
-    import config as c
-    import matplotlib.pyplot as plt
 
 #creates arrays with values for x and y in terms of nm with 0 at center (offset by 1)
     x = np.arange(-0.5*g.width,0,c.pixel_size, dtype='float64')
@@ -196,12 +214,10 @@ def pattern_creation():
     g.perfect_map= g.perfect_map+np.fliplr( g.perfect_map)+np.flipud( g.perfect_map)+np.fliplr(np.flipud( g.perfect_map))
     return
 
+
+
 def pattern_creation_antenna_corners():
-    import numpy as np
-    import global_variables as g
-    import config as c
-    import math as m
-    import matplotlib.pyplot as plt
+
 
 #creates arrays with values for x and y in terms of nm with 0 at center (offset by 1)
     x = np.arange(-0.5*g.width,0,c.pixel_size, dtype='float64')
@@ -240,12 +256,9 @@ def pattern_creation_antenna_corners():
 
     return
 
+
+
 def pattern_creation_antenna_combined():
-    import numpy as np
-    import global_variables as g
-    import config as c
-    import math as m
-    import matplotlib.pyplot as plt
 
 #creates arrays with values for x and y in terms of nm with 0 at center (offset by 1)
     x = np.arange(-0.5*g.width,0,c.pixel_size, dtype='float64')
@@ -288,13 +301,9 @@ def pattern_creation_antenna_combined():
 
     return
 
-def pattern_creation_antenna_circles():
-    import numpy as np
-    import global_variables as g
-    import config as c
-    import math as m
-    import matplotlib.pyplot as plt
 
+
+def pattern_creation_antenna_circles():
 #creates arrays with values for x and y in terms of nm with 0 at center (offset by 1)
     x = np.arange(-0.5*g.width,0,c.pixel_size, dtype='float64')
     y = np.arange(0.5*g.height,0,-c.pixel_size, dtype='float64')
@@ -322,11 +331,9 @@ def pattern_creation_antenna_circles():
     g.perfect_map= g.perfect_map+np.fliplr( g.perfect_map)+np.flipud( g.perfect_map)+np.fliplr(np.flipud( g.perfect_map))
     return
 
-def split_exposure():
-    import threading
-    import global_variables as g
-    import config as c
 
+
+def split_exposure():
     threads = []
     exposure_shape=g.exposure_shape
     
@@ -346,11 +353,9 @@ def split_exposure():
 
     return
 
+
+
 def exposure(exposure_shape,t,nt):
-    import numpy as np
-    import math as m
-    import global_variables as g
-    import config as c
 
 #creates arrays with values for x and y in terms of nm
     x = np.linspace(0,g.width*c.pixel_size,g.width, dtype='float32')
@@ -383,9 +388,9 @@ def exposure(exposure_shape,t,nt):
     exposure_shape = exposure_shape + np.fliplr(exposure_shape)
     g.exposed_map = g.exposed_map + exposure_shape
     return
+
+
 def side_etch():
-    import global_variables as g
-    import numpy as np
     g.etch = int(round(g.etch))
     etch_mask = g.developed_map*0
     for i in range(g.etch, g.height-g.etch, 1):
@@ -404,13 +409,9 @@ def side_etch():
 
     return
 
-def plot_shapes(iter):
-    import matplotlib.pyplot as plt
-    import numpy as np
-    import config as c
-    import global_variables as g
-    import os
 
+
+def plot_shapes(iter):
     fn_iter = '0'*(5-len(str(iter)))+str(iter)
 
     plt.figure(1)
@@ -444,10 +445,9 @@ def plot_shapes(iter):
     plt.savefig(os.path.join(c.folder, fn_iter+"_overlap.png"))
 
 #    plt.show()
+
+
 def combine_images():
-    import cv2
-    import os
-    import config as c
     
     image_names = os.listdir(c.folder)
     image_names.sort()

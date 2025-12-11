@@ -1,9 +1,23 @@
-import config as c
-import global_variables as g
-import numpy as np
-from PECS_functions import *
+#! /usr/bin/python3
+
+##--------------------------------------------------------------------\
+#   PECS
+#   './PECS/test/functiontester.py'
+#   
+#   File for testing 
+#
+#   Author(s): Josh Blum
+#   Last update: December 11, 2025
+##--------------------------------------------------------------------\
+
 import csv
 import os
+import numpy as np
+
+import conf.config as c
+import conf.global_variables as g
+
+from obj_func.PECS_functions import *
 
 g.width = int(g.width/c.pixel_size)
 g.height = int(g.height/c.pixel_size)

@@ -1,16 +1,17 @@
 #! /usr/bin/python3
 
 ##--------------------------------------------------------------------\
-#   pso_basic
-#   './pso_basic/src/particle_swarm.py'
-#   Particle swarm class. This class has been modified from the original
+#   PECS
+#   './PECS/src/particle_swarm.py'
+#   Particle swarm class featuring an adaptive time step and mean
+#       distribution. This class has been modified from the original
 #       to include message passing for UI integration, and underflow 
 #       and overflow min/max caps to accommodate wider user input
 #       options in AntennaCAT. Does not use time step modulation.
 #       
 #
-#   Author(s):  Lauren Linkous, Jonathan Lundquist
-#   Last update: June 1, 2025
+#   Author(s): Jonathan Lundquist, Lauren Linkous, Josh Blum
+#   Last update: December 11, 2025
 ##--------------------------------------------------------------------\
 
 import numpy as np

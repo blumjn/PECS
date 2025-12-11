@@ -1,9 +1,24 @@
-import config as c
-import global_variables as g
-import numpy as np
-from PECS_functions import *
+
+#! /usr/bin/python3
+
+##--------------------------------------------------------------------\
+#   PECS
+#   '.src/obj_func/swarm_feeder_v6.py'
+#
+#
+#   Author(s):  Josh Blum, Lauren Linkous
+#   Last update: December 11, 2025
+##--------------------------------------------------------------------\
+
 import csv
 import os
+import numpy as np
+
+import conf.config as c
+import conf.global_variables as g
+
+from obj_func.PECS_functions import *
+
 
 def PECS_feeder(X, NO_OF_OUTS):
 

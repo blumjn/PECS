@@ -1,24 +1,27 @@
 #! /usr/bin/python3
 
 ##--------------------------------------------------------------------\
-#   pso_python
-#   '.src/lundquist_3_var/configs_F.py'
+#   PECS
+#   '.src/obj_func/configs_F.py'
 #   Constant values for objective function. Formatted for
 #       automating objective function integration
 #
 #
-#   Author(s): Lauren Linkous, Jonathan Lundquist
-#   Last update: May 25, 2024
+#   Author(s): Lauren Linkous, Jonathan Lundquist, Josh Blum
+#   Last update: December 11, 2025
 ##--------------------------------------------------------------------\
 import sys
-import config as c
+import conf.config as c
 try: # for outside func calls
-    sys.path.insert(0, './pso_python/src/')
-    from swarm_feeder_v6 import PECS_feeder
-    from constr_F import constr_F
+
+    sys.path.insert(0, './PECS/src/')
+    from obj_func.swarm_feeder_v6 import PECS_feeder
+    from obj_func.constr_F import constr_F
 except: # for local
-    from swarm_feeder_v6 import PECS_feeder
-    from constr_F import constr_F
+    from obj_func.swarm_feeder_v6 import PECS_feeder
+    from obj_func.constr_F import constr_F
+
+
 
 OBJECTIVE_FUNC = PECS_feeder
 CONSTR_FUNC = constr_F

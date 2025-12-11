@@ -1,3 +1,5 @@
+#! /usr/bin/python3
+
 
 #This file sets up the raith and is where the parameters such as pixel size and beamstep get set
 

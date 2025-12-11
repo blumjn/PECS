@@ -1,3 +1,4 @@
+#! /usr/bin/python3
 pattern_shape = []
 exposure_shape = []
 exposed_map = []
