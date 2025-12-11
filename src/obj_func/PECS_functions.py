@@ -14,6 +14,9 @@ import threading
 import numpy as np
 import math as m
 import matplotlib.pyplot as plt
+import cv2
+import os
+
 
 import conf.global_variables as g
 import conf.config as c
@@ -33,167 +36,311 @@ def area_setup():
     g.perfect_map = np.array([[0 for j in range(pattern_row)] for i in range(pattern_col)], dtype=float)
     return
 
+
+
 def FoM():
 
     g.overlap_map = np.logical_xor(g.developed_map,g.perfect_map)
-
-#Takes a crosscut of the map at x=0 (actually offset by +-1)    
-    crosscut = g.developed_map[int(c.height/2),:]
-
-#If there are at least 4 exposed pixels, then there are two developed lines of non-unity width
-#If the exposed pixels take up the whole space, then there is no gap 
-    if sum(crosscut)>3 and sum(crosscut)<(c.width-4):
-#turnpoints stores the indices where the step changes
-        turnpoints = []
-
-        for i in range(1,c.width,1):
-#checks if the step has changed, stores the index if yes
-            if (crosscut[i]^crosscut[i-1])==1:
-                turnpoints.append(i)
- 
-#the first line width is the right hand pixel - the left hand pixel times the pixel size
-#the gap is the left hand pixel of the second line minus the right hand pixel of the first times the pixel size
-        lw = (turnpoints[1]-turnpoints[0])*c.pixel_size
-        gap = (turnpoints[2]-turnpoints[1])*c.pixel_size
-#If the number of exposed pixels is too great, assume that the lines take up the whole space and the gap is 0        
-    elif sum(crosscut)>=(c.width-4):
-        lw = c.width*c.pixel_size
-        gap = 0
-#If all else fails, assume that the lines did not develop at all
-    else:
-        lw = 0
-        gap = c.width*c.pixel_size
-    overlap = np.count_nonzero(g.overlap_map)
-        
+    # plt.figure(1)
+    # plt.imshow(g.perfect_map, cmap=plt.cm.gray, extent = [-g.width/2,g.width/2,-g.height/2,g.height/2])
+    # plt.figure(2)
+    # plt.imshow(g.developed_map, cmap=plt.cm.gray, extent = [-g.width/2,g.width/2,-g.height/2,g.height/2])
+    # plt.figure(3)
+    # plt.imshow(g.overlap_map, cmap=plt.cm.gray, extent = [-g.width/2,g.width/2,-g.height/2,g.height/2])
+    # plt.show()
     return np.count_nonzero(g.overlap_map)
+
+
 
 def FoM_lines():
 
-#Takes a crosscut of the map at x=0 (actually offset by +-1)    
-    crosscut = g.developed_map[int(c.height/2),:]
+#Takes a crosscut of the map 2 pixels below the top edge of the gap  
+    crosscut = g.developed_map[int((g.height/2)+(c.gap_height/(2*c.pixel_size))-2),:]
 
-#If there are at least 4 exposed pixels, then there are two developed lines of non-unity width
-#If the exposed pixels take up the whole space, then there is no gap 
-    if sum(crosscut)>3 and sum(crosscut)<(c.width-4):
 #turnpoints stores the indices where the step changes
-        turnpoints = []
-
-        for i in range(1,c.width,1):
+    turnpoints = []
+    for i in range(2,g.width,1):
 #checks if the step has changed, stores the index if yes
-            if (crosscut[i]^crosscut[i-1])==1:
+        if (crosscut[i]^crosscut[i-1])==1:
                 turnpoints.append(i)
  
 #the first line width is the right hand pixel - the left hand pixel times the pixel size
 #the gap is the left hand pixel of the second line minus the right hand pixel of the first times the pixel size
-        lw = (turnpoints[1]-turnpoints[0])*c.pixel_size
-        gap = (turnpoints[2]-turnpoints[1])*c.pixel_size
+        if len(turnpoints) == 6:
+            w1 = (turnpoints[5]-turnpoints[0])*c.pixel_size
+            gap = (turnpoints[2]-turnpoints[1])*c.pixel_size
+            w3 = (turnpoints[3]-turnpoints[2])*c.pixel_size
+            #print("4 turnpoints, lw =", lw, ", gap = ", gap)
+    
 #If the number of exposed pixels is too great, assume that the lines take up the whole space and the gap is 0        
-    elif sum(crosscut)>=(c.width-4):
-        lw = c.width*c.pixel_size
-        gap = 0
+        elif len(turnpoints) == 2:
+            w1 = (turnpoints[1]-turnpoints[0])*c.pixel_size/2
+            w3 = w1
+            gap = 0
+            #print("2 turnpoints, lw =", lw, ", gap = ", gap)
+#If all else fails, assume that the lines did not develop at all
+        else:
+            w1 = 0
+            w3 =0
+            gap = g.width*c.pixel_size
+            #print("0 turnpoints, lw =", lw, ", gap = ", gap)  
+    return w1, gap, w3
+
+
+
+def FoM_antennas():
+
+#Take horizontal crosscuts at the vertical center, 1 pixel below the top edge of the gap, and halfway between the top edge of the gap and the top of the antenna 
+    h_crosscut_1 = g.developed_map[int(g.height/2),:]
+    h_crosscut_2 = g.developed_map[int((g.height/2)+(c.gap_height/(2*c.pixel_size)))-1,:]
+    h_crosscut_3 = g.developed_map[int((g.height/2)+((c.gap_height-c.antenna_height))/(2*c.pixel_size)),:]
+
+#Take vertical crosscuts at the inside edge, horizontal center of the antenna, and outside edge
+    v_crosscut_1 = g.developed_map[:,int((g.width/2)+c.gap_width/(2*c.pixel_size))]
+    v_crosscut_2 = g.developed_map[:,int((g.width/2)+c.gap_width/(2*c.pixel_size)+c.antenna_width/(2*c.pixel_size))]
+    v_crosscut_3 = g.developed_map[:,int((g.width/2)+c.gap_width/(2*c.pixel_size)+c.antenna_width/(c.pixel_size))]
+
+#If there are at least 4 exposed pixels, then there are two developed lines of non-unity width
+#If the exposed pixels take up the whole space, then there is no gap 
+
+#turnpoints stores the indices where the step changes
+    turnpoints_h1 = []
+    turnpoints_h2 = []
+    turnpoints_h3 = []
+    turnpoints_v1 = []
+    turnpoints_v2 = []
+    turnpoints_v3 = []
+    for i in range(2,g.width,1):
+#checks if the step has changed, stores the index if yes
+        if (h_crosscut_1[i]^h_crosscut_1[i-1])==1:
+                turnpoints_h1.append(i)
+        if (h_crosscut_2[i]^h_crosscut_2[i-1])==1:
+                turnpoints_h2.append(i)
+        if (h_crosscut_3[i]^h_crosscut_3[i-1])==1:
+                turnpoints_h3.append(i)
+    for i in range(2,g.height,1):
+#checks if the step has changed, stores the index if yes
+        if (v_crosscut_1[i]^v_crosscut_1[i-1])==1:
+                turnpoints_v1.append(i)
+        if (v_crosscut_2[i]^v_crosscut_2[i-1])==1:
+                turnpoints_v2.append(i)
+        if (v_crosscut_3[i]^v_crosscut_3[i-1])==1:
+                turnpoints_v3.append(i)
+ 
+#the first line width is the right hand pixel - the left hand pixel times the pixel size
+#the gap is the left hand pixel of the second line minus the right hand pixel of the first times the pixel size
+    if len(turnpoints_h1) == 4:
+        width1 = (turnpoints_h1[1]-turnpoints_h1[0])*c.pixel_size
+        gap1 = (turnpoints_h1[2]-turnpoints_h1[1])*c.pixel_size
+        #print("4 turnpoints, lw =", lw, ", gap = ", gap)
+
+#If the number of exposed pixels is too great, assume that the lines take up the whole space and the gap is 0        
+    elif len(turnpoints_h1) == 2:
+        width1 = (turnpoints_h1[1]-turnpoints_h1[0])*c.pixel_size/2
+        gap1 = 0
+        #print("2 turnpoints, lw =", lw, ", gap = ", gap)
 #If all else fails, assume that the lines did not develop at all
     else:
-        lw = 0
-        gap = c.width*c.pixel_size  
+        width1 = 0
+        gap1 = g.width*c.pixel_size
+
+    if len(turnpoints_h2) == 4:
+        width2 = (turnpoints_h2[1]-turnpoints_h2[0])*c.pixel_size
+        gap2 = (turnpoints_h2[2]-turnpoints_h2[1])*c.pixel_size
+    elif len(turnpoints_h2) == 2:
+        width2 = (turnpoints_h2[1]-turnpoints_h2[0])*c.pixel_size/2
+        gap2 = 0
+    else:
+        width2 = 0
+        gap2 = g.width*c.pixel_size
+
+    if len(turnpoints_h3) == 4:
+        width3 = (turnpoints_h3[1]-turnpoints_h3[0])*c.pixel_size
+        gap3 = (turnpoints_h3[2]-turnpoints_h3[1])*c.pixel_size
+    elif len(turnpoints_h3) == 2:
+        width3 = (turnpoints_h3[1]-turnpoints_h3[0])*c.pixel_size/2
+        gap3 = 0
+    else:
+        width3 = 0
+        gap3 = g.width*c.pixel_size
+
+    if len(turnpoints_v1) == 2:
+        height1 = (turnpoints_v1[1]-turnpoints_v1[0])*c.pixel_size
+    else:
+        height1 = 0
+    if len(turnpoints_v2) == 2:
+        height2 = (turnpoints_v2[1]-turnpoints_v2[0])*c.pixel_size
+    else:
+        height2 = 0
+    if len(turnpoints_v3) == 2:
+        height3 = (turnpoints_v3[1]-turnpoints_v3[0])*c.pixel_size
+    else:
+        height3 = 0
+
+    return gap1, width1, gap2, width2, gap3, width3, height1, height2, height3
 
 
-    return lw, gap, crosscut
 
 def pattern_creation():
 
 #creates arrays with values for x and y in terms of nm with 0 at center (offset by 1)
-    x = np.linspace(-c.width*c.pixel_size/2,-c.beamstep_px+c.width*c.pixel_size/2,c.width, dtype='float64')
-    y = np.linspace(c.height*c.pixel_size/2,c.beamstep_px-c.height*c.pixel_size/2,c.height, dtype='float64')
-#steps through map and assigns a value of 1 if the position is within bounds
-    for i in range(0, c.height, c.beamstep_px):
-        for j in range(0, c.width, c.beamstep_px):
-            if abs(x[j])>=100 and abs(x[j])<180:
-                g.pattern_map[i][j] = 1                    
-    return
-
-def pattern_creation_antennas():
-
-#creates arrays with values for x and y in terms of nm with 0 at center (offset by 1)
-    x = np.linspace(-c.width*c.pixel_size/2,-c.beamstep_px+c.width*c.pixel_size/2,c.width, dtype='float64')
-    y = np.linspace(c.height*c.pixel_size/2,c.beamstep_px-c.height*c.pixel_size/2,c.height, dtype='float64')
-
+    x = np.arange(-0.5*g.width,0,c.pixel_size, dtype='float64')
+    y = np.arange(0.5*g.height,0,-c.pixel_size, dtype='float64')
     X,Y = np.meshgrid(x,y)
 
-#setup for perfect shape, does a little math for convenience
-    pm = (c.antenna_height-c.gap_height)/(2*c.antenna_width)
-    pb = c.gap_height/2
-    px_local_p = x-(c.gap_width/2)
-    px_local_n = x+(c.gap_width/2)
-
-#setup for pattern shape, does a little math for convenience
-    m = (g.antenna_height-g.gap_height)/(2*g.antenna_width)
-    b = g.gap_height/2
-    x_local_p = x-(g.gap_width/2)
-    x_local_n = x+(g.gap_width/2)
-    ri_u_p = np.sqrt(((X-g.ci[0])**2)+((Y-g.ci[1])**2))
-    ri_l_p = np.sqrt(((X-g.ci[0])**2)+((Y+g.ci[1])**2))
-    ri_u_n = np.sqrt(((X+g.ci[0])**2)+((Y-g.ci[1])**2))
-    ri_l_n = np.sqrt(((X+g.ci[0])**2)+((Y+g.ci[1])**2))
-    ro_u_p = np.sqrt(((X-g.co[0])**2)+((Y-g.co[1])**2))
-    ro_l_p = np.sqrt(((X-g.co[0])**2)+((Y+g.co[1])**2))
-    ro_u_n = np.sqrt(((X+g.co[0])**2)+((Y-g.co[1])**2))
-    ro_l_n = np.sqrt(((X+g.co[0])**2)+((Y+g.co[1])**2))
-
 #steps through map and assigns a value of 1 if the position is within bounds
-#first loop creates the target shape, pulled from config file
-#note that this does NOT use beamstep
-    for i in range(0, c.height, 1):
-        for j in range(0, c.width, 1):
-            if (y[i]<(pm*px_local_p[j]+pb)) and (y[i]>(-pm*px_local_p[j]-pb)) and (px_local_p[j]>0) and (px_local_p[j]<c.antenna_width):
-                g.perfect_map[i][j] = 1    
-            if (y[i]<(-pm*px_local_n[j]+pb)) and (y[i]>(pm*px_local_n[j]-pb)) and (px_local_n[j]<0) and (px_local_n[j]>-c.antenna_width):
+    for i in range(0, len(y), int(c.beamstep_nm/c.pixel_size)):
+        for j in range(0, len(x), int(c.beamstep_nm/c.pixel_size)):
+            if ((abs(x[j])<=g.outer_square/2) and (abs(y[i])<=g.outer_square/2)):
+                g.pattern_map[i][j] = 1
+            if ((abs(x[j])<=g.donut_square/2) and (abs(y[i])<=g.donut_square/2)):
+                g.pattern_map[i][j] = 0
+            if ((abs(x[j])<=g.inner_square/2) and (abs(y[i])<=g.inner_square/2)):
+                g.pattern_map[i][j] = 1
+
+    g.pattern_map=g.pattern_map+np.fliplr(g.pattern_map)+np.flipud(g.pattern_map)+np.fliplr(np.flipud(g.pattern_map))
+
+    for i in range(0, len(y), 1):
+        for j in range(0, len(x), 1):
+            if ((abs(x[j])<=g.w1) and (abs(y[i])<=g.w1)) and not\
+               (((abs(x[j])-g.w1+g.r1)**2+(abs(y[i])-g.w1+g.r1)**2>g.r1**2) and (abs(x[j])>g.w1-g.r1) and (abs(y[i])>g.w1-g.r1)):
                 g.perfect_map[i][j] = 1
-
-#second loop creates the modified exposure shape
-#note that this DOES use beamstep
-    for i in range(0, c.height, c.beamstep_px):
-        for j in range(0, c.width, c.beamstep_px):
-
-#main trapezoid
-            if (y[i]<(m*x_local_p[j]+b)) and (y[i]>(-m*x_local_p[j]-b)) and (x_local_p[j]>0) and (x_local_p[j]<g.antenna_width):
-                g.pattern_map[i][j] = g.d0    
-            if (y[i]<(-m*x_local_n[j]+b)) and (y[i]>(m*x_local_n[j]-b)) and (x_local_n[j]<0) and (x_local_n[j]>-g.antenna_width):
-                g.pattern_map[i][j] = g.d0
-
-#top and bottom borders
-            if (y[i]<(m*x_local_p[j]+b)) and (y[i]>(m*x_local_p[j]+b-g.d1_w)) and (x_local_p[j]>0) and (x_local_p[j]<g.antenna_width):
-                g.pattern_map[i][j] = g.d1    
-            if (y[i]<(-m*x_local_n[j]+b)) and (y[i]>(-m*x_local_n[j]+b-g.d1_w)) and (x_local_n[j]<0) and (x_local_n[j]>-g.antenna_width):
-                g.pattern_map[i][j] = g.d1
-            if (y[i]<(-m*x_local_p[j]-b+g.d1_w)) and (y[i]>(-m*x_local_p[j]-b)) and (x_local_p[j]>0) and (x_local_p[j]<g.antenna_width):
-                g.pattern_map[i][j] = g.d1    
-            if (y[i]<(m*x_local_n[j]-b+g.d1_w)) and (y[i]>(m*x_local_n[j]-b)) and (x_local_n[j]<0) and (x_local_n[j]>-g.antenna_width):
-                g.pattern_map[i][j] = g.d1
-
-#outside border    
-            if (y[i]<(m*x_local_p[j]+b)) and (y[i]>(-m*x_local_p[j]-b)) and (x_local_p[j]>(g.antenna_width-g.d2_w)) and (x_local_p[j]<g.antenna_width):
-                g.pattern_map[i][j] = g.d2    
-            if (y[i]<(-m*x_local_n[j]+b)) and (y[i]>(m*x_local_n[j]-b)) and (x_local_n[j]<(-g.antenna_width+g.d2_w)) and (x_local_n[j]>-g.antenna_width):
-                g.pattern_map[i][j] = g.d2
-
-#inside border    
-            if (y[i]<(m*x_local_p[j]+b)) and (y[i]>(-m*x_local_p[j]-b)) and (x_local_p[j]>0) and (x_local_p[j]<g.d3_w):
-                g.pattern_map[i][j] = g.d3    
-            if (y[i]<(-m*x_local_n[j]+b)) and (y[i]>(m*x_local_n[j]-b)) and (x_local_n[j]<0) and (x_local_n[j]>-g.d3_w):
-                g.pattern_map[i][j] = g.d3
-
-
-#inner and outer circles            
-            if (ri_u_p[i][j] <= g.ri) or (ri_l_p[i][j] <= g.ri) or (ri_u_n[i][j] <= g.ri) or (ri_l_n[i][j] <= g.ri):
-                g.pattern_map[i][j] = g.di
-            if (ro_u_p[i][j] <= g.ro) or (ro_l_p[i][j] <= g.ro) or (ro_u_n[i][j] <= g.ro) or (ro_l_n[i][j] <= g.ro):
-                g.pattern_map[i][j] = g.do
+            if ((abs(x[j])<=g.w2) and (abs(y[i])<=g.w2)) and not\
+               (((abs(x[j])-g.w2+g.r2)**2+(abs(y[i])-g.w2+g.r2)**2>g.r2**2) and (abs(x[j])>g.w2-g.r2) and (abs(y[i])>g.w2-g.r2)):
+                g.perfect_map[i][j] = 0
+            if ((abs(x[j])<=g.w3) and (abs(y[i])<=g.w3)) and not\
+               (((abs(x[j])-g.w3+g.r3)**2+(abs(y[i])-g.w3+g.r3)**2>g.r3**2) and (abs(x[j])>g.w3-g.r3) and (abs(y[i])>g.w3-g.r3)):
+                g.perfect_map[i][j] = 1
+    g.perfect_map= g.perfect_map+np.fliplr( g.perfect_map)+np.flipud( g.perfect_map)+np.fliplr(np.flipud( g.perfect_map))
     return
 
-def split_exposure():
 
+
+def pattern_creation_antenna_corners():
+
+
+#creates arrays with values for x and y in terms of nm with 0 at center (offset by 1)
+    x = np.arange(-0.5*g.width,0,c.pixel_size, dtype='float64')
+    y = np.arange(0.5*g.height,0,-c.pixel_size, dtype='float64')
+    X,Y = np.meshgrid(x,y)
+    if g.x1 != g.x2:
+        m1 = (g.y2-g.y1)/(g.x2-g.x1)
+    else:
+        m1=99999
+    m2 = (g.y3-g.y2)/(g.x3-g.x2)
+    m3 = (g.y4-g.y3)/(g.x4-g.x3)
+    if g.x4 != g.x5:
+        m4 = (g.y5-g.y4)/(g.x5-g.x4)
+    else:
+        m4=99999
+    b1=g.y1-m1*g.x1
+    b2=g.y2-m2*g.x2
+    b3=g.y3-m3*g.x3
+    b4=g.y4-m4*g.x4
+
+#steps through map and assigns a value of 1 if the position is within bounds
+    for i in range(0, len(y), int(c.beamstep_nm/c.pixel_size)):
+        for j in range(0, len(x), int(c.beamstep_nm/c.pixel_size)):
+            if ((abs(x[j])>=(y[i]-b1)/m1) and (abs(x[j])<=(y[i]-b4)/m4) and ((abs(y[i])<=m2*abs(x[j])+b2) or (abs(y[i])<=m3*abs(x[j])+b3))):
+                g.pattern_map[i][j] = g.d0
+
+    g.pattern_map=g.pattern_map+np.fliplr(g.pattern_map)+np.flipud(g.pattern_map)+np.fliplr(np.flipud(g.pattern_map))
+
+    for i in range(0, len(y), 1):
+        for j in range(0, len(x), 1):
+            if ((abs(x[j])<=c.antenna_width) and (abs(y[i])<=m.tan(m.radians(c.antenna_angle/2))*abs(x[j]))):
+                g.perfect_map[i][j] = 1
+            if ((abs(x[j])<=c.gap_width/2)):
+                g.perfect_map[i][j] = 0
+    g.perfect_map= g.perfect_map+np.fliplr( g.perfect_map)+np.flipud( g.perfect_map)+np.fliplr(np.flipud( g.perfect_map))
+
+    return
+
+
+
+def pattern_creation_antenna_combined():
+
+#creates arrays with values for x and y in terms of nm with 0 at center (offset by 1)
+    x = np.arange(-0.5*g.width,0,c.pixel_size, dtype='float64')
+    y = np.arange(0.5*g.height,0,-c.pixel_size, dtype='float64')
+    X,Y = np.meshgrid(x,y)
+    if g.x1 != g.x2:
+        m1 = (g.y2-g.y1)/(g.x2-g.x1)
+    else:
+        m1=99999
+    m2 = (g.y3-g.y2)/(g.x3-g.x2)
+    m3 = (g.y4-g.y3)/(g.x4-g.x3)
+    if g.x4 != g.x5:
+        m4 = (g.y5-g.y4)/(g.x5-g.x4)
+    else:
+        m4=99999
+    b1=g.y1-m1*g.x1
+    b2=g.y2-m2*g.x2
+    b3=g.y3-m3*g.x3
+    b4=g.y4-m4*g.x4
+
+#steps through map and assigns a value of 1 if the position is within bounds
+    for i in range(0, len(y), int(c.beamstep_nm/c.pixel_size)):
+        for j in range(0, len(x), int(c.beamstep_nm/c.pixel_size)):
+            if ((abs(x[j])>=(y[i]-b1)/m1) and (abs(x[j])<=(y[i]-b4)/m4) and ((abs(y[i])<=m2*abs(x[j])+b2) or (abs(y[i])<=m3*abs(x[j])+b3))):
+                g.pattern_map[i][j] = g.d0
+            if m.sqrt(((abs(x[j])-g.x2)**2)+((abs(y[i])-g.y2)**2))<=g.r1:
+                g.pattern_map[i][j] = g.d1
+            if m.sqrt(((abs(x[j])-g.x4)**2)+((abs(y[i])-g.y4)**2))<=g.r2:
+                g.pattern_map[i][j] = g.d2
+
+    g.pattern_map=g.pattern_map+np.fliplr(g.pattern_map)+np.flipud(g.pattern_map)+np.fliplr(np.flipud(g.pattern_map))
+
+    for i in range(0, len(y), 1):
+        for j in range(0, len(x), 1):
+            if ((abs(x[j])<=c.antenna_width) and (abs(y[i])<=m.tan(m.radians(c.antenna_angle/2))*abs(x[j]))):
+                g.perfect_map[i][j] = 1
+            if ((abs(x[j])<=c.gap_width/2)):
+                g.perfect_map[i][j] = 0
+    g.perfect_map= g.perfect_map+np.fliplr( g.perfect_map)+np.flipud( g.perfect_map)+np.fliplr(np.flipud( g.perfect_map))
+
+    return
+
+
+
+def pattern_creation_antenna_circles():
+#creates arrays with values for x and y in terms of nm with 0 at center (offset by 1)
+    x = np.arange(-0.5*g.width,0,c.pixel_size, dtype='float64')
+    y = np.arange(0.5*g.height,0,-c.pixel_size, dtype='float64')
+    X,Y = np.meshgrid(x,y)
+
+#steps through map and assigns a value of 1 if the position is within bounds
+    for i in range(0, len(y), int(c.beamstep_nm/c.pixel_size)):
+        for j in range(0, len(x), int(c.beamstep_nm/c.pixel_size)):
+            if ((abs(x[j])<=g.antenna_width) and (abs(y[i])<=m.tan(m.radians(g.antenna_angle/2))*abs(x[j]))):
+                g.pattern_map[i][j] = g.d0
+            if ((abs(x[j])<=g.gap_width/2)):
+                g.pattern_map[i][j] = 0
+            if m.sqrt(((abs(x[j])-g.x1)**2)+((abs(y[i])-g.y1)**2))<=g.r1:
+                g.pattern_map[i][j] = g.d1
+            if m.sqrt(((abs(x[j])-g.x2)**2)+((abs(y[i])-g.y2)**2))<=g.r2:
+                g.pattern_map[i][j] = g.d2
+    g.pattern_map=g.pattern_map+np.fliplr(g.pattern_map)+np.flipud(g.pattern_map)+np.fliplr(np.flipud(g.pattern_map))
+
+    for i in range(0, len(y), 1):
+        for j in range(0, len(x), 1):
+            if ((abs(x[j])<=c.antenna_width) and (abs(y[i])<=m.tan(m.radians(c.antenna_angle/2))*abs(x[j]))):
+                g.perfect_map[i][j] = 1
+            if ((abs(x[j])<=c.gap_width/2)):
+                g.perfect_map[i][j] = 0
+    g.perfect_map= g.perfect_map+np.fliplr( g.perfect_map)+np.flipud( g.perfect_map)+np.fliplr(np.flipud( g.perfect_map))
+    return
+
+
+
+def split_exposure():
     threads = []
     exposure_shape=g.exposure_shape
+    
+    while (g.height/2)%c.nt != 0:
+        print(g.height/2,c.nt)
+        c.nt = c.nt-1
+        print(c.nt)
 
     for i in range(c.nt):
         threads.append(threading.Thread(target=exposure, args=(exposure_shape,i,c.nt,)))
@@ -203,54 +350,115 @@ def split_exposure():
 
     for i in threads:
         i.join()
+
     return
+
+
 
 def exposure(exposure_shape,t,nt):
 
-
 #creates arrays with values for x and y in terms of nm
-    x = np.linspace(0,c.width*c.pixel_size,c.width, dtype='float32')
-    y = np.linspace(0,c.height*c.pixel_size,c.height, dtype='float32')
+    x = np.linspace(0,g.width*c.pixel_size,g.width, dtype='float32')
+    y = np.linspace(0,g.height*c.pixel_size,g.height, dtype='float32')
 
 #creates  2D versions of x and y
 
     X,Y = np.meshgrid(x,y)
 
 #steps through the pattern and checks if it should expose the area
-    for i in range(t,c.height,nt):
-        for j in range(c.width):
+    for i in range(int(t*(g.height/(2*nt))),int((t+1)*(g.height/(2*nt))),1):
+        for j in range(int(g.width/2)):
+            q = 0
+            r = int(round(g.charge_rad))
             if g.pattern_map[i][j] > 0:
+                for l in range(-r,r+1):
+                    for n in range(-r,r+1):
+                        if g.pattern_map[i-l][j-n] > 0 and m.sqrt(((x[j]-x[j-n])**2)+((y[i]-y[i-l])**2))<=r :
+                            q = q + g.pattern_map[i-l][j-n]
+                q = q/(m.pi*r*r)
+
 #if an exposed pixel is found, calculate distance to all other pixels, then add exposure
                 r = np.sqrt(((X-x[j])**2)+((Y-y[i])**2))
-                exposure_shape = exposure_shape+g.pattern_map[i][j]*(c.dose/(m.pi*(1+c.eta)))*((1/(c.alpha**2))*np.exp(-0.5*(r**2)/(c.alpha**2))+(c.eta/(c.beta**2))*np.exp(-0.5*(r**2)/(c.beta**2)))
+                v = g.v*q
+                exposure_shape = exposure_shape+g.pattern_map[i][j]*(g.dose/(m.pi*(1+g.eta+v)))*((1/(g.alpha**2))*np.exp(-0.5*(r**2)/(g.alpha**2))+\
+                                                                                                   (g.eta/(g.beta**2))*np.exp(-0.5*(r**2)/(g.beta**2))+\
+                                                                                                    (v/(2*g.gamma**2))*np.exp(-r/(g.gamma)))
+
+    exposure_shape = exposure_shape + np.flipud(exposure_shape)
+    exposure_shape = exposure_shape + np.fliplr(exposure_shape)
     g.exposed_map = g.exposed_map + exposure_shape
     return
 
-def plot_shapes():
+
+def side_etch():
+    g.etch = int(round(g.etch))
+    etch_mask = g.developed_map*0
+    for i in range(g.etch, g.height-g.etch, 1):
+        for j in range(g.etch, g.width-g.etch, 1):
+            if etch_mask[i][j] == 0 and g.developed_map[i][j] == 0:
+
+                for n in range(-g.etch,g.etch+1, 1):
+                    if etch_mask[i][j] == 0:
+
+                        for m in range(-g.etch,g.etch+1,1):
+                            if (g.developed_map[i-n][j-m] == 1) and ((n**2)+(m**2)<=g.etch**2):
+                                etch_mask[i][j] =1
+                                break
+
+    g.developed_map = np.logical_or(g.developed_map,etch_mask)
+
+    return
+
+
+
+def plot_shapes(iter):
+    fn_iter = '0'*(5-len(str(iter)))+str(iter)
 
     plt.figure(1)
-    plt.imshow(g.pattern_map, cmap=plt.cm.gray, extent=[0,c.width,0,c.height])
-    plt.xticks(range(0,c.width,c.tickspacing))
-    plt.yticks(range(0,c.height,c.tickspacing))
+    plt.imshow(g.pattern_map, cmap=plt.cm.gray, extent = [-g.width/2,g.width/2,-g.height/2,g.height/2])
+
+    # plt.clim(0,2)
+    plt.title("Pattern, Iteration = "+str(iter))
+    plt.savefig(os.path.join(c.folder, fn_iter+"_pattern.png"))
 
     plt.figure(2)
-    plt.imshow(g.exposed_map, cmap=plt.cm.gray, extent=[0,c.width,0,c.height])
-    plt.xticks(range(0,c.width,c.tickspacing))
-    plt.yticks(range(0,c.height,c.tickspacing))
+    plt.imshow(g.exposed_map, cmap=plt.cm.gray, extent = [-g.width/2,g.width/2,-g.height/2,g.height/2])
+
+    plt.title("Exposure, Iteration = "+str(iter))
+    plt.savefig(os.path.join(c.folder, fn_iter+"_exposure.png")) 
 
     plt.figure(3)
-    plt.imshow(g.developed_map, cmap=plt.cm.gray, extent=[0,c.width,0,c.height])
-    plt.xticks(range(0,c.width,c.tickspacing))
-    plt.yticks(range(0,c.height,c.tickspacing))
+    plt.imshow(g.developed_map, cmap=plt.cm.gray, extent = [-g.width/2,g.width/2,-g.height/2,g.height/2])
+
+    plt.title("Development, Iteration = "+str(iter))
+    plt.savefig(os.path.join(c.folder, fn_iter+"_development.png"))
     
     plt.figure(4)
-    plt.imshow(g.perfect_map, cmap=plt.cm.gray, extent=[0,c.width,0,c.height])
-    plt.xticks(range(0,c.width,c.tickspacing))
-    plt.yticks(range(0,c.height,c.tickspacing))
+    plt.imshow(g.perfect_map, cmap=plt.cm.gray, extent = [-g.width/2,g.width/2,-g.height/2,g.height/2])
+    plt.title("Perfect Shape, Iteration = "+str(iter))
+    plt.savefig(os.path.join(c.folder, fn_iter+"_perfect.png"))
 
     plt.figure(5)
-    plt.imshow(g.overlap_map, cmap=plt.cm.gray, extent=[0,c.width,0,c.height])
-    plt.xticks(range(0,c.width,c.tickspacing))
-    plt.yticks(range(0,c.height,c.tickspacing))
+    plt.imshow(g.overlap_map, cmap=plt.cm.gray, extent = [-g.width/2,g.width/2,-g.height/2,g.height/2])
 
-    plt.show()
+    plt.title("Overlap, Iteration = "+str(iter))
+    plt.savefig(os.path.join(c.folder, fn_iter+"_overlap.png"))
+
+#    plt.show()
+
+
+def combine_images():
+    
+    image_names = os.listdir(c.folder)
+    image_names.sort()
+    num_images = len(image_names)-2
+ 
+    for i in range(0,num_images,4):
+        img1 = cv2.imread(os.path.join(c.folder,image_names[i]))
+        img2 = cv2.imread(os.path.join(c.folder,image_names[i+1]))
+        img3 = cv2.imread(os.path.join(c.folder,image_names[i+2]))
+        img4 = cv2.imread(os.path.join(c.folder,image_names[i+3]))
+        img_tile = cv2.vconcat([cv2.hconcat([img4, img2]),cv2.hconcat([img1, img3])])
+        img_name = str("combined"+image_names[i][:5]+".jpg")
+        cv2.imwrite(os.path.join(c.folder,img_name),img_tile)
+        

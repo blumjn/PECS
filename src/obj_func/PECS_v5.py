@@ -11,7 +11,7 @@
 
 import time
 
-from obj_func.swarm_feeder_v3 import PECS_feeder # instaed of * so we're explicitly pulling PECS_feeder from v3 
+from obj_func.swarm_feeder_v6 import PECS_feeder # instead of * so we're explicitly pulling PECS_feeder from v6 
 from obj_func.PECS_v5 import plot_shapes
 
 start_time=time.time()
