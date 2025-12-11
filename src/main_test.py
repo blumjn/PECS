@@ -13,8 +13,9 @@
 #   Last update: December 11, 2025
 ##--------------------------------------------------------------------\
 
-
-
+import os
+import time
+import csv
 import numpy as np
 import pandas as pd
 
@@ -23,6 +24,10 @@ from optimizer.particle_swarm import swarm
 
 # OBJECTIVE FUNCTION SELECTION
 import obj_func.configs_F as func_configs     # PECS objective function
+
+# OTHERS
+import conf.config as c
+from obj_func.swarm_feeder_v6 import *
 
 start_time=time.time()
 if __name__ == "__main__":
@@ -52,8 +57,7 @@ if __name__ == "__main__":
     #DEFAULT THRESHOLD
     THRESHOLD = np.zeros_like(TARGETS) 
     #THRESHOLD = np.ones_like(TARGETS)
-    #THRESHOLD = [0]
-
+    #THRESHOLD = [0,0,0,0,0]
 
 
     # optimizer constants
