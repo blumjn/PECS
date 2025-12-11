@@ -5,16 +5,22 @@
 #   '.src/obj_func/PECS_functions.py'
 #
 #
-#   Author(s):  Josh Blum
+#   Author(s):  Josh Blum, Lauren Linkous
 #   Last update: December 11, 2025
 ##--------------------------------------------------------------------\
 
 
+import threading
+import numpy as np
+import math as m
+import matplotlib.pyplot as plt
+
+import conf.global_variables as g
+import conf.config as c
+
 
 def area_setup():
-    import numpy as np
-    import global_variables as g
-    import config as c
+
 #This function sets up the empty arrays for both the pattern and the resulting exposure
 #x,y in terms of pixels, not nm
 
@@ -30,9 +36,6 @@ def area_setup():
     return
 
 def FoM():
-    import config as c
-    import global_variables as g
-    import numpy as np
 
     g.overlap_map = np.logical_xor(g.developed_map,g.perfect_map)
 
@@ -67,8 +70,6 @@ def FoM():
     return np.count_nonzero(g.overlap_map)
 
 def FoM_lines():
-    import config as c
-    import global_variables as g
 
 #Takes a crosscut of the map at x=0 (actually offset by +-1)    
     crosscut = g.developed_map[int(c.height/2),:]
@@ -101,9 +102,6 @@ def FoM_lines():
     return lw, gap, crosscut
 
 def pattern_creation():
-    import numpy as np
-    import global_variables as g
-    import config as c
 
 #creates arrays with values for x and y in terms of nm with 0 at center (offset by 1)
     x = np.linspace(-c.width*c.pixel_size/2,-c.beamstep_px+c.width*c.pixel_size/2,c.width, dtype='float64')
@@ -116,10 +114,7 @@ def pattern_creation():
     return
 
 def pattern_creation_antennas():
-    import numpy as np
-    import global_variables as g
-    import config as c
-    
+
 #creates arrays with values for x and y in terms of nm with 0 at center (offset by 1)
     x = np.linspace(-c.width*c.pixel_size/2,-c.beamstep_px+c.width*c.pixel_size/2,c.width, dtype='float64')
     y = np.linspace(c.height*c.pixel_size/2,c.beamstep_px-c.height*c.pixel_size/2,c.height, dtype='float64')
@@ -198,9 +193,6 @@ def pattern_creation_antennas():
     return
 
 def split_exposure():
-    import threading
-    import global_variables as g
-    import config as c
 
     threads = []
     exposure_shape=g.exposure_shape
@@ -216,10 +208,6 @@ def split_exposure():
     return
 
 def exposure(exposure_shape,t,nt):
-    import numpy as np
-    import math as m
-    import global_variables as g
-    import config as c
 
 
 #creates arrays with values for x and y in terms of nm
@@ -241,10 +229,6 @@ def exposure(exposure_shape,t,nt):
     return
 
 def plot_shapes():
-    import matplotlib.pyplot as plt
-    import numpy as np
-    import config as c
-    import global_variables as g
 
     plt.figure(1)
     plt.imshow(g.pattern_map, cmap=plt.cm.gray, extent=[0,c.width,0,c.height])
