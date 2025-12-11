@@ -13,12 +13,14 @@
 import sys
 import conf.config as c
 try: # for outside func calls
+
     sys.path.insert(0, './PECS/src/')
     from obj_func.swarm_feeder_v3 import PECS_feeder
     from obj_func.constr_F import constr_F
 except: # for local
     from obj_func.swarm_feeder_v3 import PECS_feeder
     from obj_func.constr_F import constr_F
+
 
 OBJECTIVE_FUNC = PECS_feeder
 CONSTR_FUNC = constr_F
