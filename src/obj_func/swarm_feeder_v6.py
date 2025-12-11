@@ -1,4 +1,14 @@
 
+#! /usr/bin/python3
+
+##--------------------------------------------------------------------\
+#   PECS
+#   '.src/obj_func/swarm_feeder_v6.py'
+#
+#
+#   Author(s):  Josh Blum, Lauren Linkous
+#   Last update: December 11, 2025
+##--------------------------------------------------------------------\
 
 import csv
 import os
