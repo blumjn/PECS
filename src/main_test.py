@@ -109,6 +109,7 @@ if __name__ == "__main__":
 
 
     while not myOptimizer.complete():
+        print("next loop")
   
         # step through optimizer processing
         # this will update particle or agent locations
