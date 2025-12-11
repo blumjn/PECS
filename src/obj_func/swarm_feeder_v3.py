@@ -10,10 +10,12 @@
 ##--------------------------------------------------------------------\
 
 
-import config as c
-import global_variables as g
 import numpy as np
-from PECS_functions import *
+from obj_func.PECS_functions import *
+import conf.config as c
+import conf.global_variables as g
+
+
 
 def PECS_feeder(X, NO_OF_OUTS):
     F = np.zeros((NO_OF_OUTS))

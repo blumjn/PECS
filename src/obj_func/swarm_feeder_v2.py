@@ -10,9 +10,9 @@
 ##--------------------------------------------------------------------\
 
 
-import config as c
-import global_variables as g
 import numpy as np
+import conf.config as c
+import conf.global_variables as g
 from PECS_functions import *
 
 def PECS_feeder(X, NO_OF_OUTS):

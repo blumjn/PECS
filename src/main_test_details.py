@@ -14,16 +14,15 @@
 ##--------------------------------------------------------------------\
 
 
-import pandas as pd
-import numpy as np
 import time
-from src.conf.swarm.particle_swarm import swarm
+import numpy as np
+import pandas as pd
 
+# OPTIMIZER 
+from optimizer.particle_swarm import swarm
 
 # OBJECTIVE FUNCTION SELECTION
-#import one_dim_x_test.configs_F as func_configs     # single objective, 1D input
-#import himmelblau.configs_F as func_configs         # single objective, 2D input
-import configs_F as func_configs     # multi objective function
+import obj_func.configs_F as func_configs     # PECS objective function
 
 
 
