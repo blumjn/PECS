@@ -15,14 +15,14 @@
 
 
 
-import pandas as pd
 import numpy as np
+import pandas as pd
+
+# OPTIMIZER 
 from optimizer.particle_swarm import swarm
 
 # OBJECTIVE FUNCTION SELECTION
-#import one_dim_x_test.configs_F as func_configs     # single objective, 1D input
-#import himmelblau.configs_F as func_configs         # single objective, 2D input
-import configs_F as func_configs     # multi objective function
+import obj_func.configs_F as func_configs     # PECS objective function
 
 
 
@@ -51,9 +51,9 @@ if __name__ == "__main__":
     # 1 = use as threshold. value should be LESS THAN OR EQUAL to target
     # 2 = use as threshold. value should be GREATER THAN OR EQUAL to target
     #DEFAULT THRESHOLD
-    #THRESHOLD = np.zeros_like(TARGETS) 
+    THRESHOLD = np.zeros_like(TARGETS) 
     #THRESHOLD = np.ones_like(TARGETS)
-    THRESHOLD = [0]
+    #THRESHOLD = [0]
 
 
     # optimizer constants
