@@ -88,29 +88,28 @@ zipp==3.18.1
 
 new requirements.txt (still checking if imports are missing)
 ```python
-contourpy==1.2.1
+contourpy==1.3.3
 cycler==0.12.1
-fonttools==4.51.0
-importlib_resources==6.4.0
-kiwisolver==1.4.5
-matplotlib==3.8.4
-numpy==1.26.4
-packaging==24.0
-pandas==2.2.3
-pillow==10.3.0
-pyparsing==3.1.2
+fonttools==4.61.0
+kiwisolver==1.4.9
+matplotlib==3.10.8
+numpy==2.2.6
+opencv-python==4.12.0.88
+packaging==25.0
+pandas==2.3.3
+pillow==12.0.0
+pyparsing==3.2.5
 python-dateutil==2.9.0.post0
-pytz==2025.1
-six==1.16.0
-tzdata==2025.1
-zipp==3.18.1
+pytz==2025.2
+six==1.17.0
+tzdata==2025.2
 ```
 
 
 
 Optionally, requirements can be installed manually with:
 ```
-pip intall pandas numpy matplotlib
+pip intall pandas numpy matplotlib opencv-python
 
 ```
 
