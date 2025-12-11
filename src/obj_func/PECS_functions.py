@@ -23,10 +23,8 @@ def area_setup():
 
 #This function sets up the empty arrays for both the pattern and the resulting exposure
 #x,y in terms of pixels, not nm
-
 #pattern is most likely a lower resolution than the exposure and is based on the Raith stepsize
-    pattern_row, pattern_col = (c.width, c.height)
-
+    pattern_row, pattern_col = (round(g.width/c.pixel_size), round(g.height/c.pixel_size))
 #creates the 2D arrays
     g.pattern_shape = np.array([[0 for j in range(pattern_row)] for i in range(pattern_col)], dtype=float)
     g.exposure_shape = np.array([[0 for j in range(pattern_row)] for i in range(pattern_col)], dtype=float)
