@@ -1,21 +1,23 @@
 #! /usr/bin/python3
 
 ##--------------------------------------------------------------------\
-#   pso_python
-#   './pso_python/src/main_test.py'
+#   PECS
+#   './PECS/src/main_test.py'
 #   Test function/example for using the 'swarm' class in particle_swarm.py.
 #       This has been modified from the original to include message 
 #       passing back to the parent class or testbench, rather than printing
 #       error messages directly from the 'swarm' class. Format updates are 
 #       for integration in the AntennaCAT GUI.
 #
-#   Author(s): Jonathan Lundquist, Lauren Linkous
-#   Last update: March 12, 2025
+#   Author(s): Jonathan Lundquist, Lauren Linkous, Josh Blum
+#   Last update: December 11, 2025
 ##--------------------------------------------------------------------\
+
+
 
 import pandas as pd
 import numpy as np
-from particle_swarm import swarm
+from optimizer.particle_swarm import swarm
 
 # OBJECTIVE FUNCTION SELECTION
 #import one_dim_x_test.configs_F as func_configs     # single objective, 1D input
