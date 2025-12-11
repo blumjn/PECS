@@ -1,5 +1,4 @@
 #! /usr/bin/python3
-
 pattern_shape = []
 exposure_shape = []
 exposed_map = []
@@ -26,24 +25,34 @@ etch = 2 #side etch in nm
 charge_rad = 56 #nm radius for charge to effect PSF
 
 ## Shape defining parameters
-#[20,16,60,70,8,10,5,78,30,8,1,1,1]
-gap_height = 20
-gap_width = 16
-antenna_height = 60
-antenna_width = 70
+x1 = 12.5
+y1 = 0
+x2 = 9
+y2 = 5.7
+x3 = 68.3
+y3 = 33
+x4 = 106.1
+y4 = 49.6
+x5 = 105.1
+y5 = 0
 
-ci = [8,10] #inner circle centers
-ri = 5 #inner circle radii
-co = [78,30] #outer circle centers
-ro = 8 #outer circle radii
+gap_width = 18 #nm
+antenna_width = 103.4 #nm, measured from center
+antenna_angle = 47 #deg, full angle NOT from y=0
+d0 = 0.9
 
-d1_w = 2 #top and bottom border width
-d2_w = 5 #outside border width
-d3_w = 4 #inside border width
+r1 = 3.2
+r2 = 2
+d1 = 2.6
+d2 = 3.2
 
-d0 = 1 #main trapezoid dose factor
-d1 = .5 #top and bottom border dose
-d2 = .5 #outside border dose
-d3 = .5 #inside border dose
-di = .75 #inner circle dose factor
-do = .75 #outer circle dose factor
+outer_square = 200 #outer square in nm
+donut_square = 150 #inner of outer in nm
+inner_square = 100 # inner square in nm
+
+# r1 = 20
+# r2 = 17
+# r3 = 19
+# w1 = 104
+# w2 = 71
+#w3 = 38
